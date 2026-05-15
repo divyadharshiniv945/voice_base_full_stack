@@ -1,0 +1,68 @@
+{% extends 'layouts/base.html' %}
+{% block title %}User Dashboard | Ulavi Auth{% endblock %}
+
+{% block content %}
+<section class="dashboard-shell">
+    <aside class="sidebar glass-card">
+        <div class="sidebar-brand">
+            <h2>Ulavi</h2>
+            <span>Secure dashboard</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a class="sidebar-link active" href="{{ url_for('dashboard.index') }}">Overview</a>
+            <a class="sidebar-link" href="{{ url_for('dashboard.profile') }}">Profile</a>
+            <a class="sidebar-link" href="{{ url_for('dashboard.voice') }}">Voice Query</a>
+            {% if current_user.is_admin %}
+            <a class="sidebar-link" href="{{ url_for('admin.dashboard') }}">Admin Panel</a>
+            {% endif %}
+            <a class="sidebar-link" href="{{ url_for('auth.logout') }}">Logout</a>
+        </nav>
+    </aside>
+
+    <main class="dashboard-main">
+        <div class="dashboard-hero glass-card">
+            <div>
+                <p class="eyebrow">Welcome back</p>
+                <h1>Hi, {{ current_user.username }}.</h1>
+                <p>Review your account summary, update your profile, and keep your data secure.</p>
+            </div>
+            <div class="status-chip">{{ current_user.role | capitalize }}</div>
+        </div>
+
+        <div class="dashboard-grid">
+            <article class="dashboard-card">
+                <h3>Last login</h3>
+                <p>{{ current_user.last_login or 'No previous session' }}</p>
+            </article>
+            <article class="dashboard-card">
+                <h3>Account status</h3>
+                <p>{{ 'Active' if current_user.is_active else 'Disabled' }}</p>
+            </article>
+            <article class="dashboard-card">
+                <h3>Joined on</h3>
+                <p>{{ current_user.created_at.strftime('%b %d, %Y') }}</p>
+            </article>
+        </div>
+
+        <div class="dashboard-panel glass-card">
+            <div class="panel-header">
+                <h2>Account overview</h2>
+                <span>Manage settings and security from one place</span>
+            </div>
+            <div class="panel-grid">
+                <div class="user-card">
+                    <img src="{{ url_for('static', filename='images/profiles/' + current_user.profile_image) }}" alt="Profile image" class="avatar" />
+                    <div>
+                        <p class="label">{{ current_user.username }}</p>
+                        <p class="muted">{{ current_user.email }}</p>
+                    </div>
+                </div>
+                <div class="panel-details">
+                    <p>Use the profile page to update your name, email, and profile photo.</p>
+                    <a href="{{ url_for('dashboard.profile') }}" class="link-primary">Go to profile settings</a>
+                </div>
+            </div>
+        </div>
+    </main>
+</section>
+{% endblock %}

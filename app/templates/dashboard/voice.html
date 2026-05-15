@@ -1,0 +1,564 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Voice Query | Ulavi Auth{% endblock %}
+
+{% block content %}
+<section class="dashboard-shell">
+    <aside class="sidebar glass-card">
+        <div class="sidebar-brand">
+            <h2>Ulavi</h2>
+            <span>Secure dashboard</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a class="sidebar-link" href="{{ url_for('dashboard.index') }}">Overview</a>
+            <a class="sidebar-link" href="{{ url_for('dashboard.profile') }}">Profile</a>
+            <a class="sidebar-link active" href="{{ url_for('dashboard.voice') }}">Voice Query</a>
+            {% if current_user.is_admin %}
+            <a class="sidebar-link" href="{{ url_for('admin.dashboard') }}">Admin Panel</a>
+            {% endif %}
+            <a class="sidebar-link" href="{{ url_for('auth.logout') }}">Logout</a>
+        </nav>
+    </aside>
+
+    <main class="dashboard-main">
+        <div class="dashboard-panel glass-card voice-panel">
+            <div class="panel-header">
+                <h2>Voice Query</h2>
+                <span>Speak in your language and we'll translate it to English.</span>
+            </div>
+
+            <div class="voice-container">
+                <!-- SCREEN 1 -->
+                <div id="s1">
+                    <div class="voice-section">
+                        <label class="voice-label">Choose Your Language</label>
+                        <select id="langSelect" class="voice-select">
+                            <option value="en-US">🇺🇸 English</option>
+                            <option value="ta-IN">🇮🇳 Tamil</option>
+                            <option value="hi-IN">🇮🇳 Hindi</option>
+                            <option value="te-IN">🇮🇳 Telugu</option>
+                            <option value="ml-IN">🇮🇳 Malayalam</option>
+                            <option value="kn-IN">🇮🇳 Kannada</option>
+                            <option value="fr-FR">🇫🇷 French</option>
+                            <option value="de-DE">🇩🇪 German</option>
+                            <option value="es-ES">🇪🇸 Spanish</option>
+                            <option value="it-IT">🇮🇹 Italian</option>
+                            <option value="pt-BR">🇧🇷 Portuguese</option>
+                            <option value="ru-RU">🇷🇺 Russian</option>
+                            <option value="zh-CN">🇨🇳 Chinese</option>
+                            <option value="ja-JP">🇯🇵 Japanese</option>
+                            <option value="ko-KR">🇰🇷 Korean</option>
+                            <option value="ar-SA">🇸🇦 Arabic</option>
+                        </select>
+                    </div>
+
+                    <div class="voice-mic-wrap">
+                        <div class="wave-wrap" id="waveWrap">
+                            <div class="wave"></div>
+                            <div class="wave"></div>
+                            <div class="wave"></div>
+                            <div class="wave"></div>
+                            <div class="wave"></div>
+                        </div>
+                        <button class="mic-btn" id="micBtn">🎙️</button>
+                    </div>
+
+                    <div class="voice-status" id="rst">
+                        Tap microphone to start
+                    </div>
+                    <div class="voice-timer" id="timer">00:00</div>
+                </div>
+
+                <!-- SCREEN 2 -->
+                <div id="s2" style="display:none;">
+                    <div class="voice-section">
+                        <label class="voice-label">Original + English Translation</label>
+                        <textarea id="qtxt" class="voice-textarea"></textarea>
+                    </div>
+
+                    <div class="voice-section">
+                        <label class="voice-label">Mobile Number</label>
+                        <div class="phone-input-group">
+                            <select id="countryCode" class="voice-select phone-code">
+                                <option value="+91">🇮🇳 +91</option>
+                                <option value="+1">🇺🇸 +1</option>
+                                <option value="+44">🇬🇧 +44</option>
+                                <option value="+61">🇦🇺 +61</option>
+                                <option value="+971">🇦🇪 +971</option>
+                            </select>
+                            <input type="tel" id="ph" class="voice-input" placeholder="9876543210">
+                        </div>
+                    </div>
+
+                    <div class="voice-section">
+                        <label class="voice-label">Email Address</label>
+                        <input type="email" id="email" class="voice-input" placeholder="example@gmail.com">
+                    </div>
+
+                    <div class="voice-actions">
+                        <button class="btn btn-primary" id="sendBtn">Send Query →</button>
+                        <button class="btn btn-secondary" id="backBtn">← Record Again</button>
+                    </div>
+                </div>
+
+                <!-- SCREEN 3 -->
+                <div id="s3" style="display:none;">
+                    <div class="voice-success">
+                        <div class="success-check">✓</div>
+                        <h3>Query Sent!</h3>
+                        <p>Thank you for your query. Our team will get back to you shortly.</p>
+                        <div class="success-details" id="cdet"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<style>
+.voice-container {
+    padding: 1.5rem 0;
+}
+
+.voice-section {
+    margin-bottom: 1.5rem;
+}
+
+.voice-label {
+    display: block;
+    font-size: 0.95rem;
+    color: #d4dae8;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+
+.voice-select,
+.voice-input,
+.voice-textarea {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #eef0ff;
+    border-radius: 16px;
+    padding: 0.95rem 1rem;
+    font-size: 0.95rem;
+    transition: transform 0.25s ease, border-color 0.25s ease;
+}
+
+.voice-select:focus,
+.voice-input:focus,
+.voice-textarea:focus {
+    outline: none;
+    transform: translateY(-1px);
+    border-color: rgba(124, 92, 255, 0.95);
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.voice-textarea {
+    min-height: 200px;
+    resize: vertical;
+    font-family: inherit;
+    line-height: 1.6;
+}
+
+.phone-input-group {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.phone-code {
+    width: 140px;
+    flex-shrink: 0;
+}
+
+.voice-mic-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 2rem 0;
+}
+
+.wave-wrap {
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 5px;
+    height: 40px;
+    margin-bottom: 15px;
+}
+
+.wave-wrap.active {
+    display: flex;
+}
+
+.wave {
+    width: 6px;
+    height: 12px;
+    border-radius: 10px;
+    background: #7c5cff;
+    animation: waveAnim 1s infinite ease-in-out;
+}
+
+.wave:nth-child(2) { animation-delay: 0.1s; }
+.wave:nth-child(3) { animation-delay: 0.2s; }
+.wave:nth-child(4) { animation-delay: 0.3s; }
+.wave:nth-child(5) { animation-delay: 0.4s; }
+
+@keyframes waveAnim {
+    0%, 100% { height: 12px; }
+    50% { height: 35px; }
+}
+
+.mic-btn {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    font-size: 40px;
+    background: linear-gradient(135deg, #7c5cff, #5b7dff);
+    color: white;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 16px 30px rgba(124, 92, 255, 0.22);
+}
+
+.mic-btn:hover {
+    transform: translateY(-2px);
+}
+
+.mic-btn.rec {
+    background: linear-gradient(135deg, #ff5c75, #ff7a7a);
+}
+
+.voice-status {
+    text-align: center;
+    font-weight: 600;
+    color: #9aa5d4;
+    margin-bottom: 1rem;
+}
+
+.voice-status.live {
+    color: #ff5c75;
+}
+
+.voice-status.ok {
+    color: #3dd68c;
+}
+
+.voice-timer {
+    text-align: center;
+    color: #7f869f;
+    font-size: 0.95rem;
+}
+
+.voice-actions {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.voice-success {
+    text-align: center;
+    padding: 2rem 0;
+}
+
+.success-check {
+    width: 75px;
+    height: 75px;
+    border-radius: 50%;
+    margin: 0 auto 1.5rem;
+    background: rgba(61, 214, 140, 0.12);
+    border: 2px solid #3dd68c;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 32px;
+    color: #3dd68c;
+}
+
+.voice-success h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.voice-success p {
+    color: #9aa5d4;
+    margin-bottom: 1.5rem;
+}
+
+.success-details {
+    background: rgba(10, 16, 40, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1.5rem;
+    line-height: 1.8;
+    font-size: 0.95rem;
+    text-align: left;
+    color: #d4dae8;
+}
+
+.toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(20, 28, 68, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 12px 20px;
+    border-radius: 18px;
+    display: none;
+    z-index: 999;
+    color: white;
+}
+</style>
+
+<script>
+const CFG = {
+    ejs_public_key: 'cTupOs2j8Jcw5okHI',
+    ejs_service_id: 'divyadharshiniv404@gmail',
+    ejs_template_id: 'template_mq3nkgh',
+    support_email: 'divyadharshiniv404@gmail.com'
+};
+
+emailjs.init(CFG.ejs_public_key);
+
+let rawText = '';
+let translatedText = '';
+let selectedLanguage = 'en-US';
+let recognition = null;
+let recording = false;
+let recTimer = null;
+let secInterval = null;
+let seconds = 0;
+
+const $ = id => document.getElementById(id);
+const micBtn = $('micBtn');
+const rst = $('rst');
+const qtxt = $('qtxt');
+const ph = $('ph');
+const countryCode = $('countryCode');
+const email = $('email');
+const sendBtn = $('sendBtn');
+const backBtn = $('backBtn');
+const cdet = $('cdet');
+const toast = $('toast');
+const waveWrap = $('waveWrap');
+const langSelect = $('langSelect');
+
+langSelect.addEventListener('change', () => {
+    selectedLanguage = langSelect.value;
+});
+
+function show(screen) {
+    $('s1').style.display = screen === 's1' ? 'block' : 'none';
+    $('s2').style.display = screen === 's2' ? 'block' : 'none';
+    $('s3').style.display = screen === 's3' ? 'block' : 'none';
+}
+
+function showToast(msg) {
+    toast.innerText = msg;
+    toast.style.display = 'block';
+    setTimeout(() => { toast.style.display = 'none'; }, 3000);
+}
+
+function startRec() {
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+        showToast('Use Chrome or Edge browser');
+        return;
+    }
+
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SR();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = selectedLanguage;
+    rawText = '';
+
+    recognition.onstart = () => {
+        waveWrap.classList.add('active');
+        recording = true;
+        seconds = 0;
+        micBtn.classList.add('rec');
+        micBtn.innerHTML = '⏹️';
+        rst.innerHTML = 'Recording...';
+        rst.className = 'voice-status live';
+
+        secInterval = setInterval(() => {
+            seconds++;
+            const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+            const s = String(seconds % 60).padStart(2, '0');
+            $('timer').innerText = `${m}:${s}`;
+        }, 1000);
+
+        recTimer = setTimeout(() => {
+            if (recording) {
+                recognition.stop();
+                recording = false;
+                clearInterval(secInterval);
+                waveWrap.classList.remove('active');
+                micBtn.classList.remove('rec');
+                micBtn.innerHTML = '🎙️';
+                rst.innerHTML = 'Recording stopped (60 sec reached)';
+                rst.className = 'voice-status ok';
+                $('timer').innerText = '00:00';
+                showToast('60 seconds reached');
+            }
+        }, 60000);
+    };
+
+    recognition.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript + ' ';
+        }
+        rawText += transcript;
+    };
+
+    recognition.onerror = (event) => {
+        console.error(event.error);
+        showToast('Mic Error: ' + event.error);
+    };
+
+    recognition.start();
+}
+
+function stopRec() {
+    if (!recognition) return;
+    clearTimeout(recTimer);
+    clearInterval(secInterval);
+
+    recognition.onend = () => {
+        recording = false;
+        micBtn.classList.remove('rec');
+        micBtn.innerHTML = '🎙️';
+        rst.innerHTML = 'Recording stopped';
+        rst.className = 'voice-status ok';
+        $('timer').innerText = '00:00';
+        if (rawText.trim().length > 0) {
+            goReview(rawText.trim());
+        }
+    };
+    waveWrap.classList.remove('active');
+    recognition.stop();
+}
+
+micBtn.addEventListener('click', () => {
+    if (recording) {
+        stopRec();
+    } else {
+        startRec();
+    }
+});
+
+async function translate(text) {
+    try {
+        const sourceLang = selectedLanguage.split('-')[0];
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=en&dt=t&q=${encodeURIComponent(text)}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        let translated = '';
+        data[0].forEach(item => { translated += item[0]; });
+        return translated;
+    } catch (err) {
+        console.error(err);
+        throw new Error('Translation failed');
+    }
+}
+
+async function goReview(text) {
+    show('s2');
+    qtxt.value = 'Translating...';
+    try {
+        const translated = await translate(text);
+        translatedText = translated;
+        qtxt.value = `🌍 Original Language:\n${text}\n\n-----------------------------------\n\n🇺🇸 English Translation:\n${translated}`;
+    } catch (err) {
+        console.error(err);
+        qtxt.value = `🌍 Original Language:\n${text}\n\n-----------------------------------\n\n⚠ Translation Failed`;
+        showToast('Translation failed');
+    }
+}
+
+function validPhone(v) {
+    const d = v.replace(/\D/g, '');
+    const cc = countryCode.value;
+    if (cc === '+91') {
+        return /^[6-9]\d{9}$/.test(d);
+    }
+    return d.length >= 8 && d.length <= 15;
+}
+
+function validEmail(v) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+}
+
+function checkForm() {
+    const mobile = ph.value.trim();
+    const mail = email.value.trim();
+    sendBtn.disabled = !(validPhone(mobile) && validEmail(mail));
+}
+
+ph.addEventListener('input', checkForm);
+email.addEventListener('input', checkForm);
+countryCode.addEventListener('change', checkForm);
+sendBtn.disabled = true;
+
+sendBtn.addEventListener('click', async () => {
+    const mobile = countryCode.value + ' ' + ph.value.trim();
+    const userEmail = email.value.trim();
+
+    if (!validPhone(ph.value.trim())) {
+        showToast('Enter valid mobile number');
+        return;
+    }
+
+    if (!validEmail(userEmail)) {
+        showToast('Enter valid email address');
+        return;
+    }
+
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = 'Sending...';
+    const ts = new Date().toLocaleString();
+
+    try {
+        await emailjs.send(
+            CFG.ejs_service_id,
+            CFG.ejs_template_id,
+            {
+                to_email: CFG.support_email,
+                subject: `New Query from ${mobile}`,
+                mobile: mobile,
+                user_email: userEmail,
+                language: selectedLanguage,
+                original_query: rawText,
+                translated_query: translatedText,
+                submitted_at: ts
+            }
+        );
+
+        cdet.innerHTML = `<strong>Mobile:</strong> ${mobile}<br><br><strong>Email:</strong> ${userEmail}<br><br><strong>Language:</strong> ${selectedLanguage}<br><br><strong>Original Query:</strong><br>${rawText}<br><br><strong>English Translation:</strong><br>${translatedText}`;
+        show('s3');
+    } catch (err) {
+        console.error(err);
+        showToast('Email sending failed');
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = 'Send Query →';
+    }
+});
+
+backBtn.addEventListener('click', () => {
+    rawText = '';
+    translatedText = '';
+    qtxt.value = '';
+    ph.value = '';
+    email.value = '';
+    rst.innerHTML = 'Tap microphone to start';
+    rst.className = 'voice-status';
+    show('s1');
+});
+
+show('s1');
+</script>
+{% endblock %}

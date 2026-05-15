@@ -1,0 +1,65 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Admin Dashboard | Ulavi Auth{% endblock %}
+
+{% block content %}
+<section class="dashboard-shell">
+    <aside class="sidebar glass-card">
+        <div class="sidebar-brand">
+            <h2>Ulavi</h2>
+            <span>Admin workspace</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a class="sidebar-link active" href="{{ url_for('admin.dashboard') }}">Admin Home</a>
+            <a class="sidebar-link" href="{{ url_for('admin.users') }}">User Management</a>
+            <a class="sidebar-link" href="{{ url_for('dashboard.profile') }}">Profile</a>
+            <a class="sidebar-link" href="{{ url_for('auth.logout') }}">Logout</a>
+        </nav>
+    </aside>
+
+    <main class="dashboard-main">
+        <div class="dashboard-hero glass-card">
+            <div>
+                <p class="eyebrow">Administrator panel</p>
+                <h1>Manage users with confidence.</h1>
+                <p>Track registered accounts, change roles, and keep the platform secure.</p>
+            </div>
+            <div class="status-chip admin-chip">Admin</div>
+        </div>
+
+        <div class="dashboard-grid">
+            <article class="dashboard-card">
+                <h3>Total users</h3>
+                <p>{{ total_users }}</p>
+            </article>
+            <article class="dashboard-card">
+                <h3>Active accounts</h3>
+                <p>{{ active_users }}</p>
+            </article>
+            <article class="dashboard-card">
+                <h3>Recent signups</h3>
+                <p>{{ users | length }}</p>
+            </article>
+        </div>
+
+        <div class="dashboard-panel glass-card">
+            <div class="panel-header">
+                <h2>Latest registrations</h2>
+                <span>Review the newest users and verify account activity.</span>
+            </div>
+            <div class="admin-list">
+                {% for user in users %}
+                <div class="admin-list-item">
+                    <div>
+                        <p class="label">{{ user.username or 'Anonymous' }}</p>
+                        <p class="muted">{{ user.email }} · {{ user.role | capitalize }}</p>
+                    </div>
+                    <span class="badge {{ 'badge-success' if user.is_active else 'badge-muted' }}">{{ 'Active' if user.is_active else 'Inactive' }}</span>
+                </div>
+                {% else %}
+                <p class="muted">No users have registered yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+</section>
+{% endblock %}

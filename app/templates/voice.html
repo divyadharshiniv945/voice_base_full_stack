@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>Voice Query — Ulavi Technologies</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+<style>
+:root{
+  --bg:#0c0e16;
+  --surface:#13161f;
+  --surface2:#1a1e2e;
+  --border:#222638;
+  --accent:#4f8ef7;
+  --accent2:#7c5cfc;
+  --text:#e6e9f4;
+  --muted:#7f869f;
+  --green:#3dd68c;
+  --red:#ff5c75;
+  --r:18px;
+  --rs:12px;
+  --fd:'Syne',sans-serif;
+  --fb:'DM Sans',sans-serif;
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  font-family:var(--fb);
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  padding:30px 15px 80px;
+  display:flex;
+  justify-content:center;
+}
+
+.app{
+  width:100%;
+  max-width:520px;
+}
+
+.header{
+  text-align:center;
+  margin-bottom:30px;
+}
+
+.logo{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 14px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:999px;
+  color:var(--accent);
+  margin-bottom:20px;
+  font-size:13px;
+  font-weight:600;
+}
+
+.dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--accent);
+}
+
+h1{
+  font-family:var(--fd);
+  font-size:34px;
+  margin-bottom:10px;
+}
+
+.sub{
+  color:var(--muted);
+  line-height:1.7;
+}
+
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:25px;
+}
+
+.flabel{
+  font-size:12px;
+  font-weight:700;
+  color:var(--muted);
+  margin-bottom:8px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+.cc,
+textarea,
+input{
+  width:100%;
+  background:var(--surface2);
+  border:1.5px solid var(--border);
+  border-radius:var(--rs);
+  color:var(--text);
+  font-size:14px;
+  outline:none;
+}
+
+.cc{
+  height:50px;
+  padding:0 14px;
+  margin-bottom:20px;
+}
+
+textarea{
+  min-height:240px;
+  padding:15px;
+  resize:vertical;
+  line-height:1.7;
+}
+
+input{
+  height:50px;
+  padding:0 14px;
+}
+
+.mic-wrap{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  margin:25px 0;
+}
+
+.wave-wrap{
+  display:none;
+  align-items:flex-end;
+  justify-content:center;
+  gap:5px;
+  height:40px;
+  margin-bottom:15px;
+}
+
+.wave-wrap.active{
+  display:flex;
+}
+
+.wave{
+  width:6px;
+  height:12px;
+  border-radius:10px;
+  background:#4f8ef7;
+
+  animation-name: waveAnim;
+  animation-duration: 1s;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+}
+
+.wave:nth-child(2){
+  animation-delay:0.1s;
+}
+
+.wave:nth-child(3){
+  animation-delay:0.2s;
+}
+
+.wave:nth-child(4){
+  animation-delay:0.3s;
+}
+
+.wave:nth-child(5){
+  animation-delay:0.4s;
+}
+
+@keyframes waveAnim{
+
+  0%{
+    height:12px;
+  }
+
+  50%{
+    height:35px;
+  }
+
+  100%{
+    height:12px;
+  }
+}
+
+.mic-btn{
+  width:110px;
+  height:110px;
+  border-radius:50%;
+  border:none;
+  cursor:pointer;
+  font-size:40px;
+  color:white;
+  background:linear-gradient(135deg,#2a3a6e,#1e2b52);
+  transition:.3s;
+}
+
+.mic-btn.rec{
+  background:linear-gradient(135deg,#6b2232,#3b101b);
+}
+
+.rst{
+  text-align:center;
+  margin-bottom:20px;
+  font-weight:600;
+  color:var(--muted);
+}
+
+.rst.live{
+  color:var(--red);
+}
+
+.rst.ok{
+  color:var(--green);
+}
+
+.send-btn,
+.back-btn{
+  width:100%;
+  height:52px;
+  border:none;
+  border-radius:var(--rs);
+  cursor:pointer;
+  font-weight:700;
+  margin-top:15px;
+  transition:.3s;
+}
+
+.send-btn{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:white;
+}
+
+.back-btn{
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--muted);
+}
+
+.send-btn:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+}
+
+#s2,
+#s3{
+  display:none;
+}
+
+.check{
+  width:75px;
+  height:75px;
+  border-radius:50%;
+  margin:0 auto 20px;
+  background:rgba(61,214,140,.12);
+  border:2px solid var(--green);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-size:32px;
+}
+
+.ctitle{
+  text-align:center;
+  font-size:28px;
+  margin-bottom:10px;
+  font-family:var(--fd);
+}
+
+.cmsg{
+  text-align:center;
+  color:var(--muted);
+  line-height:1.7;
+  margin-bottom:20px;
+}
+
+.cdet{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:var(--rs);
+  padding:15px;
+  line-height:1.8;
+  font-size:14px;
+}
+
+.toast{
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:var(--surface2);
+  border:1px solid var(--border);
+  padding:12px 20px;
+  border-radius:10px;
+  display:none;
+  z-index:999;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<div class="header">
+
+<div class="logo">
+<span class="dot"></span>
+Ulavi Technologies
+</div>
+
+<h1>Speak Your Query</h1>
+
+<p class="sub">
+Speak in your own language.<br>
+We'll translate it into English automatically.
+</p>
+
+</div>
+
+<div class="card">
+
+<!-- SCREEN 1 -->
+<div id="s1">
+
+<div class="flabel">
+Choose Your Language
+</div>
+
+<select id="langSelect" class="cc">
+
+<option value="en-US">🇺🇸 English</option>
+<option value="ta-IN">🇮🇳 Tamil</option>
+<option value="hi-IN">🇮🇳 Hindi</option>
+<option value="te-IN">🇮🇳 Telugu</option>
+<option value="ml-IN">🇮🇳 Malayalam</option>
+<option value="kn-IN">🇮🇳 Kannada</option>
+<option value="fr-FR">🇫🇷 French</option>
+<option value="de-DE">🇩🇪 German</option>
+<option value="es-ES">🇪🇸 Spanish</option>
+<option value="it-IT">🇮🇹 Italian</option>
+<option value="pt-BR">🇧🇷 Portuguese</option>
+<option value="ru-RU">🇷🇺 Russian</option>
+<option value="zh-CN">🇨🇳 Chinese</option>
+<option value="ja-JP">🇯🇵 Japanese</option>
+<option value="ko-KR">🇰🇷 Korean</option>
+<option value="ar-SA">🇸🇦 Arabic</option>
+
+</select>
+
+<div class="mic-wrap">
+
+<div class="wave-wrap" id="waveWrap">
+
+<div class="wave"></div>
+<div class="wave"></div>
+<div class="wave"></div>
+<div class="wave"></div>
+<div class="wave"></div>
+
+</div>
+
+<button class="mic-btn" id="micBtn">🎙️</button>
+
+</div>
+
+<div class="rst" id="rst">
+Tap microphone to start
+</div>
+<div id="timer" style="text-align:center; color:#7f869f; margin-top:8px;">
+00:00
+</div>
+
+</div>
+
+<!-- SCREEN 2 -->
+<div id="s2">
+
+<div>
+
+<div class="flabel">
+Original + English Translation
+</div>
+
+</div>
+
+<textarea id="qtxt"></textarea>
+
+</div>
+
+<div style="margin-top:20px;">
+
+<div class="flabel">
+Mobile Number
+</div>
+
+<div style="display:flex; gap:10px;">
+
+<select id="countryCode" class="cc" style="width:120px; margin-bottom:0;">
+
+<option value="+91">🇮🇳 +91</option>
+<option value="+1">🇺🇸 +1</option>
+<option value="+44">🇬🇧 +44</option>
+<option value="+61">🇦🇺 +61</option>
+<option value="+971">🇦🇪 +971</option>
+
+</select>
+
+<input type="tel" id="ph" placeholder="9876543210">
+
+</div>
+
+</div>
+
+<div style="margin-top:20px;">
+
+<div class="flabel">
+Email Address
+</div>
+
+<input type="email" id="email" placeholder="example@gmail.com">
+
+</div>
+
+<button class="send-btn" id="sendBtn">
+Send Query →
+</button>
+
+<button class="back-btn" id="backBtn">
+← Record Again
+</button>
+
+</div>
+
+<!-- SCREEN 3 -->
+<div id="s3">
+
+<div class="check">
+✓
+</div>
+
+<div class="ctitle">
+Query Sent!
+</div>
+
+<p class="cmsg">
+Thank you for your query.<br>
+Our team will get back to you shortly.
+</p>
+
+<div class="cdet" id="cdet"></div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+// ===========================
+// EMAILJS CONFIG
+// ===========================
+
+const CFG = {
+
+  ejs_public_key: 'cTupOs2j8Jcw5okHI',
+
+  ejs_service_id: 'divyadharshiniv404@gmail',
+
+  ejs_template_id: 'template_mq3nkgh',
+
+  support_email: 'divyadharshiniv404@gmail.com'
+};
+
+emailjs.init(CFG.ejs_public_key);
+
+// ===========================
+// STATE
+// ===========================
+
+let rawText = '';
+let translatedText = '';
+let selectedLanguage = 'en-US';
+
+let recognition = null;
+let recording = false;
+
+let recTimer = null;
+let secInterval = null;
+let seconds = 0;
+
+// ===========================
+// DOM
+// ===========================
+
+const $ = id => document.getElementById(id);
+
+const micBtn = $('micBtn');
+const rst = $('rst');
+const qtxt = $('qtxt');
+
+const ph = $('ph');
+const countryCode = $('countryCode');
+const email = $('email');
+
+const sendBtn = $('sendBtn');
+const backBtn = $('backBtn');
+
+const cdet = $('cdet');
+const toast = $('toast');
+const waveWrap = $('waveWrap');
+const langSelect = $('langSelect');
+
+// ===========================
+// LANGUAGE CHANGE
+// ===========================
+
+langSelect.addEventListener('change', () => {
+
+  selectedLanguage = langSelect.value;
+
+});
+
+// ===========================
+// SCREEN CHANGE
+// ===========================
+
+function show(screen){
+
+  $('s1').style.display = screen === 's1' ? 'block' : 'none';
+
+  $('s2').style.display = screen === 's2' ? 'block' : 'none';
+
+  $('s3').style.display = screen === 's3' ? 'block' : 'none';
+}
+
+// ===========================
+// TOAST
+// ===========================
+
+function showToast(msg){
+
+  toast.innerText = msg;
+
+  toast.style.display = 'block';
+
+  setTimeout(() => {
+
+    toast.style.display = 'none';
+
+  },3000);
+}
+
+// ===========================
+// START RECORDING
+// ===========================
+
+function startRec(){
+
+  if(!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)){
+
+    showToast('Use Chrome browser');
+
+    return;
+  }
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  recognition = new SR();
+
+  recognition.continuous = true;
+
+  recognition.interimResults = false;
+
+  recognition.lang = selectedLanguage;
+
+  rawText = '';
+
+  recognition.onstart = () => {
+    waveWrap.classList.add('active');
+
+  recording = true;
+
+  seconds = 0;
+
+  micBtn.classList.add('rec');
+
+  micBtn.innerHTML = '⏹️';
+
+  rst.innerHTML = 'Recording...';
+
+  rst.className = 'rst live';
+
+  // Live Timer
+  secInterval = setInterval(() => {
+
+    seconds++;
+
+    const m = String(Math.floor(seconds / 60)).padStart(2,'0');
+
+    const s = String(seconds % 60).padStart(2,'0');
+
+    $('timer').innerText = `${m}:${s}`;
+
+  },1000);
+
+  // Auto Stop
+  recTimer = setTimeout(() => {
+
+    if(recording){
+
+      recognition.stop();
+
+      recording = false;
+
+      clearInterval(secInterval);
+      waveWrap.classList.remove('active');
+
+      micBtn.classList.remove('rec');
+
+      micBtn.innerHTML = '🎙️';
+
+      rst.innerHTML = 'Recording stopped (60 sec reached)';
+
+      rst.className = 'rst ok';
+
+      $('timer').innerText = '00:00';
+
+      showToast('60 seconds reached');
+
+    }
+
+  },60000);
+};
+
+  recognition.onresult = (event) => {
+
+    let transcript = '';
+
+    for(let i = event.resultIndex; i < event.results.length; i++){
+
+      transcript += event.results[i][0].transcript + ' ';
+    }
+
+    rawText += transcript;
+  };
+
+  recognition.onerror = (event) => {
+
+    console.error(event.error);
+
+    showToast('Mic Error: ' + event.error);
+  };
+
+  recognition.start();
+}
+
+// ===========================
+// STOP RECORDING
+// ===========================
+
+function stopRec(){
+
+  if(!recognition) return;
+
+  clearTimeout(recTimer);
+
+  clearInterval(secInterval);
+
+  recognition.onend = () => {
+
+    recording = false;
+
+    micBtn.classList.remove('rec');
+
+    micBtn.innerHTML = '🎙️';
+
+    rst.innerHTML = 'Recording stopped';
+
+    rst.className = 'rst ok';
+
+    $('timer').innerText = '00:00';
+
+    if(rawText.trim().length > 0){
+
+      goReview(rawText.trim());
+    }
+  };
+  waveWrap.classList.remove('active');
+  recognition.stop();
+}
+
+// ===========================
+// MIC BUTTON
+// ===========================
+
+micBtn.addEventListener('click', () => {
+
+  if(recording){
+
+    stopRec();
+
+  }else{
+
+    startRec();
+  }
+});
+
+// ===========================
+// FAST TRANSLATE
+// ===========================
+
+async function translate(text){
+
+  try{
+
+    const sourceLang = selectedLanguage.split('-')[0];
+
+    const url =
+`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=en&dt=t&q=${encodeURIComponent(text)}`;
+
+    const response = await fetch(url);
+
+    const data = await response.json();
+
+    let translated = '';
+
+    data[0].forEach(item => {
+
+      translated += item[0];
+    });
+
+    return translated;
+
+  }catch(err){
+
+    console.error(err);
+
+    throw new Error('Translation failed');
+  }
+}
+
+// ===========================
+// REVIEW
+// ===========================
+
+async function goReview(text){
+
+  show('s2');
+
+  qtxt.value = 'Translating...';
+
+  try{
+
+    const translated = await translate(text);
+
+    translatedText = translated;
+
+    qtxt.value =
+
+`🌍 Original Language:
+
+${text}
+
+-----------------------------------
+
+🇺🇸 English Translation:
+
+${translated}`;
+
+  }catch(err){
+
+    console.error(err);
+
+    qtxt.value =
+
+`🌍 Original Language:
+
+${text}
+
+-----------------------------------
+
+⚠ Translation Failed`;
+
+    showToast('Translation failed');
+  }
+}
+
+// ===========================
+// VALIDATION
+// ===========================
+
+function validPhone(v){
+
+  const d = v.replace(/\D/g,'');
+
+  const cc = countryCode.value;
+
+  // India Validation
+  if(cc === '+91'){
+
+    return /^[6-9]\d{9}$/.test(d);
+  }
+
+  // Other Countries
+  return d.length >= 8 && d.length <= 15;
+}
+
+function validEmail(v){
+
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+}
+
+// ===========================
+// LIVE FORM VALIDATION
+// ===========================
+
+function checkForm(){
+
+  const mobile = ph.value.trim();
+
+  const mail = email.value.trim();
+
+  if(validPhone(mobile) && validEmail(mail)){
+
+    sendBtn.disabled = false;
+
+  }else{
+
+    sendBtn.disabled = true;
+  }
+}
+
+ph.addEventListener('input', checkForm);
+
+email.addEventListener('input', checkForm);
+
+countryCode.addEventListener('change', checkForm);
+
+// Initially disabled
+sendBtn.disabled = true;
+
+// ===========================
+// SEND QUERY
+// ===========================
+
+sendBtn.addEventListener('click', async () => {
+
+  const mobile = countryCode.value + ' ' + ph.value.trim();
+
+  const userEmail = email.value.trim();
+
+  if(!validPhone(ph.value.trim())){
+
+    showToast('Enter valid mobile number');
+
+    return;
+  }
+
+  if(!validEmail(userEmail)){
+
+    showToast('Enter valid email address');
+
+    return;
+  }
+
+  sendBtn.disabled = true;
+
+  sendBtn.innerHTML = 'Sending...';
+
+  const ts = new Date().toLocaleString();
+
+  try{
+
+    await emailjs.send(
+
+      CFG.ejs_service_id,
+
+      CFG.ejs_template_id,
+
+      {
+
+        to_email: CFG.support_email,
+        subject: `New Query from ${mobile}`,
+
+        mobile: mobile,
+
+        user_email: userEmail,
+
+        language: selectedLanguage,
+
+        original_query: rawText,
+
+        translated_query: translatedText,
+
+        submitted_at: ts
+      }
+
+    );
+
+    cdet.innerHTML =
+
+`
+<strong>Mobile:</strong> ${mobile}
+
+<br><br>
+
+<strong>Email:</strong> ${userEmail}
+
+<br><br>
+
+<strong>Language:</strong> ${selectedLanguage}
+
+<br><br>
+
+<strong>Original Query:</strong>
+
+<br>
+
+${rawText}
+
+<br><br>
+
+<strong>English Translation:</strong>
+
+<br>
+
+${translatedText}
+`;
+
+    show('s3');
+
+  }catch(err){
+
+    console.error(err);
+
+    showToast('Email sending failed');
+
+    sendBtn.disabled = false;
+
+    sendBtn.innerHTML = 'Send Query →';
+  }
+});
+
+// ===========================
+// BACK BUTTON
+// ===========================
+
+backBtn.addEventListener('click', () => {
+
+  rawText = '';
+  translatedText = '';
+
+  qtxt.value = '';
+
+  ph.value = '';
+
+  email.value = '';
+
+  rst.innerHTML = 'Tap microphone to start';
+
+  rst.className = 'rst';
+
+  show('s1');
+});
+
+// ===========================
+// INITIAL
+// ===========================
+
+show('s1');
+
+</script>
+
+</body>
+</html>

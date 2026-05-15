@@ -1,0 +1,12 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Access Denied | Ulavi Auth{% endblock %}
+
+{% block content %}
+<section class="error-page">
+    <div class="error-box glass-card">
+        <h1>403</h1>
+        <p>Access denied. You do not have permission to view this page.</p>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Return to login</a>
+    </div>
+</section>
+{% endblock %}

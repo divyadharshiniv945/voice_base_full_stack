@@ -1,0 +1,79 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Profile | Ulavi Auth{% endblock %}
+
+{% block content %}
+<section class="dashboard-shell">
+    <aside class="sidebar glass-card">
+        <div class="sidebar-brand">
+            <h2>Ulavi</h2>
+            <span>Secure dashboard</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a class="sidebar-link" href="{{ url_for('dashboard.index') }}">Overview</a>
+            <a class="sidebar-link active" href="{{ url_for('dashboard.profile') }}">Profile</a>
+            <a class="sidebar-link" href="{{ url_for('dashboard.voice') }}">Voice Query</a>
+            {% if current_user.is_admin %}
+            <a class="sidebar-link" href="{{ url_for('admin.dashboard') }}">Admin Panel</a>
+            {% endif %}
+            <a class="sidebar-link" href="{{ url_for('auth.logout') }}">Logout</a>
+        </nav>
+    </aside>
+
+    <main class="dashboard-main">
+        <div class="dashboard-panel glass-card profile-panel">
+            <div class="panel-header">
+                <h2>Profile Settings</h2>
+                <span>Update your account and change your password securely.</span>
+            </div>
+            <div class="profile-layout">
+                <div class="profile-preview glass-card">
+                    <img src="{{ url_for('static', filename='images/profiles/' + current_user.profile_image) }}" alt="Profile" class="avatar-large" />
+                    <div>
+                        <h3>{{ current_user.username }}</h3>
+                        <p>{{ current_user.email }}</p>
+                        <p class="muted">{{ current_user.role | capitalize }} account</p>
+                    </div>
+                </div>
+
+                <div class="profile-forms">
+                    <form method="POST" enctype="multipart/form-data" class="form-card">
+                        {{ form.hidden_tag() }}
+                        <h3>Account details</h3>
+                        <div class="field-group">
+                            {{ form.username.label(class_='field-label') }}
+                            {{ form.username(class_='field-input') }}
+                        </div>
+                        <div class="field-group">
+                            {{ form.email.label(class_='field-label') }}
+                            {{ form.email(class_='field-input') }}
+                        </div>
+                        <div class="field-group">
+                            {{ form.profile_image.label(class_='field-label') }}
+                            {{ form.profile_image(class_='field-input file-input') }}
+                        </div>
+                        <button class="btn btn-primary" type="submit">Save changes</button>
+                    </form>
+
+                    <form method="POST" action="{{ url_for('dashboard.change_password') }}" class="form-card">
+                        {{ password_form.hidden_tag() }}
+                        <h3>Change password</h3>
+                        <div class="field-group">
+                            {{ password_form.current_password.label(class_='field-label') }}
+                            {{ password_form.current_password(class_='field-input') }}
+                        </div>
+                        <div class="field-group">
+                            {{ password_form.new_password.label(class_='field-label') }}
+                            {{ password_form.new_password(class_='field-input') }}
+                        </div>
+                        <div class="field-group">
+                            {{ password_form.confirm_password.label(class_='field-label') }}
+                            {{ password_form.confirm_password(class_='field-input') }}
+                        </div>
+                        <button class="btn btn-secondary" type="submit">Update password</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+</section>
+{% endblock %}

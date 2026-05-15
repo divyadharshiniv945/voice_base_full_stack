@@ -1,0 +1,84 @@
+{% extends 'layouts/base.html' %}
+{% block title %}User Management | Ulavi Auth{% endblock %}
+
+{% block content %}
+<section class="dashboard-shell">
+    <aside class="sidebar glass-card">
+        <div class="sidebar-brand">
+            <h2>Ulavi</h2>
+            <span>Admin workspace</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a class="sidebar-link" href="{{ url_for('admin.dashboard') }}">Admin Home</a>
+            <a class="sidebar-link active" href="{{ url_for('admin.users') }}">User Management</a>
+            <a class="sidebar-link" href="{{ url_for('dashboard.profile') }}">Profile</a>
+            <a class="sidebar-link" href="{{ url_for('auth.logout') }}">Logout</a>
+        </nav>
+    </aside>
+
+    <main class="dashboard-main">
+        <div class="dashboard-panel glass-card">
+            <div class="panel-header">
+                <div>
+                    <h2>Manage users</h2>
+                    <span>Search accounts, toggle status, and update roles.</span>
+                </div>
+                <form method="GET" class="search-form">
+                    <input name="search" value="{{ search }}" placeholder="Search by email or username" class="search-input" />
+                    <button class="btn btn-secondary" type="submit">Search</button>
+                </form>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Last login</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in pagination.items %}
+                        <tr>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.role.title() }}</td>
+                            <td>{{ user.last_login or 'Never' }}</td>
+                            <td>{{ 'Active' if user.is_active else 'Disabled' }}</td>
+                            <td class="actions-row">
+                                <form method="POST" action="{{ url_for('admin.change_role', user_id=user.id, search=search) }}" class="action-form">
+                                    {{ csrf_token() }}
+                                    <button class="btn btn-tertiary" type="submit">Toggle role</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('admin.toggle_status', user_id=user.id, search=search) }}" class="action-form">
+                                    {{ csrf_token() }}
+                                    <button class="btn btn-tertiary" type="submit">Toggle status</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id, search=search) }}" class="action-form">
+                                    {{ csrf_token() }}
+                                    <button class="btn btn-danger" type="submit">Remove</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination-row">
+                {% if pagination.has_prev %}
+                <a class="pagination-link" href="?page={{ pagination.prev_num }}&search={{ search }}">Prev</a>
+                {% endif %}
+                <span>Page {{ pagination.page }} of {{ pagination.pages or 1 }}</span>
+                {% if pagination.has_next %}
+                <a class="pagination-link" href="?page={{ pagination.next_num }}&search={{ search }}">Next</a>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+</section>
+{% endblock %}
